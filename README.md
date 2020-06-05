@@ -9,8 +9,8 @@ API key from avwx.rest for METAR
 API keys from mapquestapi.com and openweathermap.org for current weather
 
 ### usage:
-'metar <ICAO code>' for station METAR results
-'met <location>' for current weather
+`metar <ICAO code>` for station METAR results
+`met <location>` for current weather
 
 ### todo
 Location saving
