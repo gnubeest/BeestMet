@@ -73,9 +73,9 @@ class BeestMet(callbacks.Plugin):
             Get current weather at <location>.
         """
 
-        def quest(loc_input):
+        def quest(loc): # openmapquest geo lookup
             map_key = self.registryValue('mqKey')
-            map_load = {'location': loc_input, 'key': map_key}
+            map_load = {'location': loc, 'key': map_key}
             map_data = (requests.get(
                         'http://open.mapquestapi.com/geocoding/v1/address',
                         params=map_load).json())
@@ -83,6 +83,7 @@ class BeestMet(callbacks.Plugin):
             map_lat = map_result['latLng']['lat']
             map_lon = map_result['latLng']['lng']
 
+            ## reliability threshold
             #if (map_result['geocodeQualityCode'] ==
             #    'A1XXX'):
             #    irc.error('I cannot find reliable location data for \x0306' +
@@ -99,8 +100,59 @@ class BeestMet(callbacks.Plugin):
                         area.append(ar_val)
                 except KeyError:
                     continue
-            loc_str = "\x0314<" + str(':'.join(area)) + ">"
+            loc_str = "\x0314" + str(':'.join(area))
             return map_lat, map_lon, loc_str
+
+        def current(lat, lon, loc): # get current weather, build output
+            owm_key = self.registryValue('owKey')
+            owm_load = {'lat': lat, 'lon': lon, 'appid': owm_key}
+            owm_data = (requests.get(
+                        'http://api.openweathermap.org/data/2.5/weather',
+                        params=owm_load).json())
+
+            unix_off = owm_data['timezone']
+            unix_cur = datetime.datetime.now().timestamp()
+            unix_sta = unix_cur + unix_off
+            cur_time = datetime.datetime.fromtimestamp(unix_sta)
+            time_str = cur_time.strftime("%H:%M")
+            sky = owm_data['weather'][0]
+            temps = owm_data['main']
+            city = owm_data['name']
+            if not city:
+                city = 'unidentified station'
+            wind = owm_data['wind']
+            sky_main = sky.get('main')
+            sky_desc = sky.get('description')
+            temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
+            temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
+            temp_lo = temps.get('temp_min')
+            temp_hi = temps.get('temp_max')
+            baro = temps.get('pressure')
+            humid = temps.get('humidity')
+            try:
+                vis = ("at " + "{:.1f}".format(owm_data.get('visibility') / 1000)
+                               + "km")
+            except TypeError:
+                vis = 'is unknown'
+            wind_spd = wind.get('speed')
+            wind_dir = wind.get('deg')
+            if wind_dir:
+                dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW',
+                        'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+                ix = round(wind_dir / (360. / len(dirs)))
+                ordinal = (" " + dirs[ix % len(dirs)])
+            else:
+                ordinal = ''
+            bullet = ' \x0303•\x0f '
+            c = ':'
+            reply_str = ("\x0303Current conditions for \x0306" + city + "\x0F at " +
+                      time_str + bullet +
+                      sky_desc.capitalize() + ", " + str(temp_cur) + " (" + temp_f
+                      + "), humidity at " + str(humid) + "%. Winds"
+                      + ordinal + " at " + str(wind_spd) +
+                      "m/s. Visibility " + str(vis) + ", barometer reads "
+                      + str(baro) + " hPa. " + loc + met_nick)
+            return reply_str
 
         # call geolocation with either user input or database
         met_nick = ''
@@ -116,62 +168,14 @@ class BeestMet(callbacks.Plugin):
                 irc.error('See the administrator to register your location.')
                 return
         if metdb.get(loc_input):
-            met_nick = "\x0314:" + loc_input
+            met_nick = "\x0314/" + loc_input
             loc_input = metdb.get(loc_input)
+
         geo = quest(loc_input)
         #if geo == 'fail':
         #    return
-
-        owm_key = self.registryValue('owKey')
-        owm_load = {'lat': geo[0], 'lon': geo[1], 'appid': owm_key}
-        owm_data = (requests.get(
-                    'http://api.openweathermap.org/data/2.5/weather',
-                    params=owm_load).json())
-
-        unix_off = owm_data['timezone']
-        unix_cur = datetime.datetime.now().timestamp()
-        unix_sta = unix_cur + unix_off
-        cur_time = datetime.datetime.fromtimestamp(unix_sta)
-        time_str = cur_time.strftime("%H:%M")
-        sky = owm_data['weather'][0]
-        temps = owm_data['main']
-        city = owm_data['name']
-        if not city:
-            city = 'unidentified station'
-        wind = owm_data['wind']
-        sky_main = sky.get('main')
-        sky_desc = sky.get('description')
-        temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
-        temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
-        temp_lo = temps.get('temp_min')
-        temp_hi = temps.get('temp_max')
-        baro = temps.get('pressure')
-        humid = temps.get('humidity')
-        try:
-            vis = ("at " + "{:.1f}".format(owm_data.get('visibility') / 1000)
-                           + "km")
-        except TypeError:
-            vis = 'is unknown'
-        wind_spd = wind.get('speed')
-        wind_dir = wind.get('deg')
-        if wind_dir:
-            dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW',
-                    'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-            ix = round(wind_dir / (360. / len(dirs)))
-            ordinal = (" " + dirs[ix % len(dirs)])
-        else:
-            ordinal = ''
-
-        bullet = ' \x0303•\x0f '
-        c = ':'
-        irc.reply("\x0303Current conditions for \x0306" + city + "\x0F at " +
-                  time_str + bullet +
-                  sky_desc.capitalize() + ", " + str(temp_cur) + " (" + temp_f
-                  + "), humidity at " + str(humid) + "%. Winds"
-                  + ordinal + " at " + str(wind_spd) +
-                  "m/s. Visibility " + str(vis) + ", barometer reads "
-                  + str(baro) + " hPa. " + geo[2] + met_nick,
-                  prefixNick=False)
+        reply_str = current(geo[0], geo[1], geo[2])
+        irc.reply(reply_str, prefixNick=False)
 
     met = wrap(met, [optional('text')])
 
