@@ -83,11 +83,11 @@ class BeestMet(callbacks.Plugin):
             map_lat = map_result['latLng']['lat']
             map_lon = map_result['latLng']['lng']
 
-            if (map_result['geocodeQualityCode'] ==
-                'A1XXX'):
-                irc.error('I cannot find reliable location data for \x0306' +
-                          loc_input + '\x0F.')
-                return 'fail'
+            #if (map_result['geocodeQualityCode'] ==
+            #    'A1XXX'):
+            #    irc.error('I cannot find reliable location data for \x0306' +
+            #              loc_input + '\x0F.')
+            #    return 'fail'
 
             ar_ar = ['adminArea1', 'adminArea2', 'adminArea3', 'adminArea4',
                      'adminArea5', 'adminArea6']
@@ -103,6 +103,7 @@ class BeestMet(callbacks.Plugin):
             return map_lat, map_lon, loc_str
 
         # call geolocation with either user input or database
+        met_nick = ''
         try:
             metdb = json.load(open("{0}/met.json".format(os.path.dirname
                      (os.path.abspath(__file__)))))
@@ -111,13 +112,15 @@ class BeestMet(callbacks.Plugin):
             return
         if not loc_input:
             loc_input = metdb.get(msgs.nick)
+            if not loc_input:
+                irc.error('See the administrator to register your location.')
+                return
         if metdb.get(loc_input):
+            met_nick = "\x0314:" + loc_input
             loc_input = metdb.get(loc_input)
-        if loc_input == '':
-            loc_input == 'See the administrator to register your location.'
         geo = quest(loc_input)
-        if geo == 'fail':
-            return
+        #if geo == 'fail':
+        #    return
 
         owm_key = self.registryValue('owKey')
         owm_load = {'lat': geo[0], 'lon': geo[1], 'appid': owm_key}
@@ -167,7 +170,8 @@ class BeestMet(callbacks.Plugin):
                   + "), humidity at " + str(humid) + "%. Winds"
                   + ordinal + " at " + str(wind_spd) +
                   "m/s. Visibility " + str(vis) + ", barometer reads "
-                  + str(baro) + " hPa. " + geo[2], prefixNick=False)
+                  + str(baro) + " hPa. " + geo[2] + met_nick,
+                  prefixNick=False)
 
     met = wrap(met, [optional('text')])
 
