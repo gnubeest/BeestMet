@@ -68,40 +68,58 @@ class BeestMet(callbacks.Plugin):
 
     metar = wrap(metar, ['something'])
 
+    def nick_arg(self, my_nick, nick_inp):
+        met_nick = ''
+        try:
+            metdb = json.load(open("{0}/met.json".format(os.path.dirname
+                     (os.path.abspath(__file__)))))
+        except FileNotFoundError:
+            #irc.error('met.json not found')
+            return
+        if not nick_inp:
+            nick_inp = metdb.get(my_nick)
+            if not nick_inp:
+                irc.error('See the administrator to register your location.')
+                return
+        if metdb.get(nick_inp):
+            met_nick = "\x0314/" + nick_inp
+            nick_inp = metdb.get(nick_inp)
+        return met_nick, nick_inp
+
+    def quest(self, loc): # openmapquest geo lookup
+        map_key = self.registryValue('mqKey')
+        map_load = {'location': loc, 'key': map_key}
+        map_data = (requests.get(
+                    'http://open.mapquestapi.com/geocoding/v1/address',
+                    params=map_load).json())
+        map_result = map_data['results'][0]['locations'][0]
+        map_lat = map_result['latLng']['lat']
+        map_lon = map_result['latLng']['lng']
+
+        ## reliability threshold
+        #if (map_result['geocodeQualityCode'] ==
+        #    'A1XXX'):
+        #    irc.error('I cannot find reliable location data for \x0306' +
+        #              loc_input + '\x0F.')
+        #    return 'fail'
+
+        ar_ar = ['adminArea1', 'adminArea2', 'adminArea3', 'adminArea4',
+                 'adminArea5', 'adminArea6']
+        area = []
+        for ar_ix in range(0, 6):
+            try:
+                ar_val = map_result[ar_ar[ar_ix]]
+                if ar_val:
+                    area.append(ar_val)
+            except KeyError:
+                continue
+        loc_str = "\x0314" + str(':'.join(area))
+        return map_lat, map_lon, loc_str
+
     def met(self, irc, msgs, args, loc_input):
         """[<location>]
             Get current weather at <location>.
         """
-
-        def quest(loc): # openmapquest geo lookup
-            map_key = self.registryValue('mqKey')
-            map_load = {'location': loc, 'key': map_key}
-            map_data = (requests.get(
-                        'http://open.mapquestapi.com/geocoding/v1/address',
-                        params=map_load).json())
-            map_result = map_data['results'][0]['locations'][0]
-            map_lat = map_result['latLng']['lat']
-            map_lon = map_result['latLng']['lng']
-
-            ## reliability threshold
-            #if (map_result['geocodeQualityCode'] ==
-            #    'A1XXX'):
-            #    irc.error('I cannot find reliable location data for \x0306' +
-            #              loc_input + '\x0F.')
-            #    return 'fail'
-
-            ar_ar = ['adminArea1', 'adminArea2', 'adminArea3', 'adminArea4',
-                     'adminArea5', 'adminArea6']
-            area = []
-            for ar_ix in range(0, 6):
-                try:
-                    ar_val = map_result[ar_ar[ar_ix]]
-                    if ar_val:
-                        area.append(ar_val)
-                except KeyError:
-                    continue
-            loc_str = "\x0314" + str(':'.join(area))
-            return map_lat, map_lon, loc_str
 
         def current(lat, lon, loc): # get current weather, build output
             owm_key = self.registryValue('owKey')
@@ -151,31 +169,16 @@ class BeestMet(callbacks.Plugin):
                       + "), humidity at " + str(humid) + "%. Winds"
                       + ordinal + " at " + str(wind_spd) +
                       "m/s. Visibility " + str(vis) + ", barometer reads "
-                      + str(baro) + " hPa. " + loc + met_nick)
+                      + str(baro) + " hPa. " + loc)
             return reply_str
 
-        # call geolocation with either user input or database
-        met_nick = ''
-        try:
-            metdb = json.load(open("{0}/met.json".format(os.path.dirname
-                     (os.path.abspath(__file__)))))
-        except FileNotFoundError:
-            #irc.error('met.json not found')
-            return
-        if not loc_input:
-            loc_input = metdb.get(msgs.nick)
-            if not loc_input:
-                irc.error('See the administrator to register your location.')
-                return
-        if metdb.get(loc_input):
-            met_nick = "\x0314/" + loc_input
-            loc_input = metdb.get(loc_input)
-
-        geo = quest(loc_input)
+        my_nick = msgs.nick
+        print_nick, nick_done = self.nick_arg(my_nick, loc_input)
+        geo = self.quest(nick_done)
         #if geo == 'fail':
         #    return
         reply_str = current(geo[0], geo[1], geo[2])
-        irc.reply(reply_str, prefixNick=False)
+        irc.reply(reply_str + print_nick, prefixNick=False)
 
     met = wrap(met, [optional('text')])
 
