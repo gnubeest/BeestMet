@@ -182,6 +182,44 @@ class BeestMet(callbacks.Plugin):
 
     met = wrap(met, [optional('text')])
 
+    def forecast(self, irc, msgs, args, loc_input):
+        """[<location>]
+            Get forecast for <location>.
+        """
+
+        def seven(lat, lon, loc): # 7-day forecast
+            owm_key = self.registryValue('owKey')
+            owm_load = {'lat': lat, 'lon': lon, 'exclude':
+                        'current,minutely,hourly', 'appid': owm_key}
+            owm_data = (requests.get(
+                        'http://api.openweathermap.org/data/2.5/onecall',
+                        params=owm_load).json())
+            bullet = ' \x0303•\x0f '
+            fc_str = "\x0306Forecast"
+            for fc_day in range(0, 7):
+                fc_fc = owm_data['daily'][fc_day]
+                fc_date = fc_fc['dt']
+                fc_lo = "{:.0f}".format(fc_fc['temp']['min'] - 273.15)
+                fc_hi = "{:.0f}".format(fc_fc['temp']['max'] - 273.15)
+                fc_cond = fc_fc['weather'][0]['main']
+                fc_wkdy = (datetime.datetime.fromtimestamp
+                           (int(fc_date)).strftime('%a'))
+                fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
+                          fc_cond + ", hi "+ str(fc_hi) + "°C lo " +
+                          str(fc_lo)) + "°C"
+            fc_str = fc_str + bullet + loc
+            return fc_str
+            
+        my_nick = msgs.nick
+        print_nick, nick_done = self.nick_arg(my_nick, loc_input)
+        geo = self.quest(nick_done)
+        #if geo == 'fail':
+        #    return
+        reply_str = seven(geo[0], geo[1], geo[2])
+        irc.reply(reply_str + print_nick, prefixNick=False)
+
+    forecast = wrap(forecast, [optional('text')])
+
 Class = BeestMet
 
 
