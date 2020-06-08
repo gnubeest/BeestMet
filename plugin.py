@@ -44,6 +44,7 @@ except ImportError:
     # without the i18n module
     _ = lambda x: x
 
+bullet = ' \x0303•\x0f '
 
 class BeestMet(callbacks.Plugin):
     """get weather data"""
@@ -139,14 +140,15 @@ class BeestMet(callbacks.Plugin):
             if not city:
                 city = 'unidentified station'
             wind = owm_data['wind']
-            sky_main = sky.get('main')
+            #sky_main = sky.get('main')
             sky_desc = sky.get('description')
             temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
-            temp_lo = temps.get('temp_min')
-            temp_hi = temps.get('temp_max')
-            baro = temps.get('pressure')
+            #temp_lo = temps.get('temp_min')
+            #temp_hi = temps.get('temp_max')
+            #baro = temps.get('pressure')
             humid = temps.get('humidity')
+            feels = ("{:.0f}".format(temps.get('feels_like') - 273.15) + "°C")
             try:
                 vis = ("at " + "{:.1f}".format(owm_data.get('visibility') / 1000)
                                + "km")
@@ -158,18 +160,17 @@ class BeestMet(callbacks.Plugin):
                 dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW',
                         'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
                 ix = round(wind_dir / (360. / len(dirs)))
-                ordinal = (" " + dirs[ix % len(dirs)])
+                ordinal = (dirs[ix % len(dirs)])
             else:
                 ordinal = ''
-            bullet = ' \x0303•\x0f '
             c = ':'
-            reply_str = ("\x0303Current conditions for \x0306" + city + "\x0F at " +
-                      time_str + bullet +
-                      sky_desc.capitalize() + ", " + str(temp_cur) + " (" + temp_f
-                      + "), humidity at " + str(humid) + "%. Winds"
-                      + ordinal + " at " + str(wind_spd) +
-                      "m/s. Visibility " + str(vis) + ", barometer reads "
-                      + str(baro) + " hPa. " + loc)
+            reply_str = ("\x0303Current conditions for \x0306" + city +
+                         "\x0F at " + time_str + bullet + sky_desc.capitalize()
+                         + ", " + str(temp_cur) + " (" + temp_f +
+                         "). Feels like " + feels + " at " + str(humid) +
+                         "% humidity. Winds " + ordinal + " at " +
+                         str(wind_spd) + "m/s, visibility " + str(vis) + ". "
+                         + loc)
             return reply_str
 
         my_nick = msgs.nick
@@ -194,7 +195,6 @@ class BeestMet(callbacks.Plugin):
             owm_data = (requests.get(
                         'http://api.openweathermap.org/data/2.5/onecall',
                         params=owm_load).json())
-            bullet = ' \x0303•\x0f '
             fc_str = "\x0306Forecast"
             for fc_day in range(0, 7):
                 fc_fc = owm_data['daily'][fc_day]
