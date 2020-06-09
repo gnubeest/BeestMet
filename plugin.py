@@ -80,8 +80,9 @@ class BeestMet(callbacks.Plugin):
         if not nick_inp:
             nick_inp = metdb.get(my_nick)
             if not nick_inp:
-                irc.error('See the administrator to register your location.')
-                return
+                met_nick = 'error'
+                nick_inp = 'error'
+                return met_nick, nick_inp
         if metdb.get(nick_inp):
             met_nick = "\x0314/" + nick_inp
             nick_inp = metdb.get(nick_inp)
@@ -167,14 +168,17 @@ class BeestMet(callbacks.Plugin):
             reply_str = ("\x0303Current conditions for \x0306" + city +
                          "\x0F at " + time_str + bullet + sky_desc.capitalize()
                          + ", " + str(temp_cur) + " (" + temp_f +
-                         "). Feels like " + feels + " at " + str(humid) +
+                         "). Feels like " + feels + " with " + str(humid) +
                          "% humidity. Winds " + ordinal + " at " +
-                         str(wind_spd) + "m/s, visibility " + str(vis) + ". "
-                         + loc)
+                         str(wind_spd) + "m/s, visibility " + str(vis) + "."
+                         + bullet + loc)
             return reply_str
 
         my_nick = msgs.nick
         print_nick, nick_done = self.nick_arg(my_nick, loc_input)
+        if print_nick == 'error':
+            irc.error('See the administrator to register your location.')
+            return
         geo = self.quest(nick_done)
         #if geo == 'fail':
         #    return
@@ -195,7 +199,7 @@ class BeestMet(callbacks.Plugin):
             owm_data = (requests.get(
                         'http://api.openweathermap.org/data/2.5/onecall',
                         params=owm_load).json())
-            fc_str = "\x0306Forecast"
+            fc_str = "\x03067-day forecast"
             for fc_day in range(0, 7):
                 fc_fc = owm_data['daily'][fc_day]
                 fc_date = fc_fc['dt']
@@ -212,6 +216,9 @@ class BeestMet(callbacks.Plugin):
             
         my_nick = msgs.nick
         print_nick, nick_done = self.nick_arg(my_nick, loc_input)
+        if print_nick == 'error':
+            irc.error('See the administrator to register your location.')
+            return
         geo = self.quest(nick_done)
         #if geo == 'fail':
         #    return
