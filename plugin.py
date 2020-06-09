@@ -199,7 +199,7 @@ class BeestMet(callbacks.Plugin):
             owm_data = (requests.get(
                         'http://api.openweathermap.org/data/2.5/onecall',
                         params=owm_load).json())
-            fc_str = "\x03067-day forecast"
+            fc_str = "\x0306Forecast"
             for fc_day in range(0, 7):
                 fc_fc = owm_data['daily'][fc_day]
                 fc_date = fc_fc['dt']
@@ -208,6 +208,8 @@ class BeestMet(callbacks.Plugin):
                 fc_cond = fc_fc['weather'][0]['main']
                 fc_wkdy = (datetime.datetime.fromtimestamp
                            (int(fc_date)).strftime('%a'))
+                if fc_day == 0:
+                    fc_wkdy = 'Today'
                 fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
                           fc_cond + ", " + str(fc_lo) + "-" +
                           str(fc_hi)) + "°C"
