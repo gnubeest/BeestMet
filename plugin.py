@@ -161,15 +161,15 @@ class BeestMet(callbacks.Plugin):
                 dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW',
                         'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
                 ix = round(wind_dir / (360. / len(dirs)))
-                ordinal = (dirs[ix % len(dirs)])
+                ordinal = ' ' + (dirs[ix % len(dirs)])
             else:
                 ordinal = ''
             c = ':'
             reply_str = ("\x0303Current conditions for \x0306" + city +
-                         "\x0F at " + time_str + bullet + sky_desc.capitalize()
-                         + ", " + str(temp_cur) + " (" + temp_f +
-                         "). Feels like " + feels + " with " + str(humid) +
-                         "% humidity. Winds " + ordinal + " at " +
+                         "\x0F at " + time_str + bullet + str(temp_cur) +
+                         " (" + temp_f + "), " + sky_desc + '. Feels like ' +
+                         feels + " with " + str(humid) +
+                         "% humidity. Winds" + ordinal + " at " +
                          str(wind_spd) + "m/s, visibility " + str(vis) + "."
                          + bullet + loc)
             return reply_str
