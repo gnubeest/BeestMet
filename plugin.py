@@ -165,10 +165,10 @@ class BeestMet(callbacks.Plugin):
             else:
                 ordinal = ''
             c = ':'
-            reply_str = ("\x0303Current conditions for \x0306" + city +
-                         "\x0F at " + time_str + bullet + str(temp_cur) +
-                         " (" + temp_f + "), " + sky_desc + '. Feels like ' +
-                         feels + " with " + str(humid) +
+            reply_str = ("Current conditions for \x0306" + city +
+                         "\x0F at " + time_str + bullet + '\x0303' +
+                         str(temp_cur) + " (" + temp_f + "), " + sky_desc +
+                         '. \x0FFeels like ' + feels + " with " + str(humid) +
                          "% humidity. Winds" + ordinal + " at " +
                          str(wind_spd) + "m/s, visibility " + str(vis) + "."
                          + bullet + loc)
@@ -182,6 +182,9 @@ class BeestMet(callbacks.Plugin):
         geo = self.quest(nick_done)
         #if geo == 'fail':
         #    return
+        if (geo[0] == 39.78373) and (geo[1] == -100.445882):
+            irc.reply('Sorry, I can\'t find your location.')
+            return
         reply_str = current(geo[0], geo[1], geo[2])
         irc.reply(reply_str + print_nick, prefixNick=False)
 
