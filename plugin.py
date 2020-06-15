@@ -45,6 +45,10 @@ except ImportError:
     _ = lambda x: x
 
 bullet = ' \x0303•\x0f '
+pink = "\x0313"
+green = "\x0303"
+bol = '\x02'
+nul = "\x0F"
 
 class BeestMet(callbacks.Plugin):
     """get weather data"""
@@ -151,7 +155,7 @@ class BeestMet(callbacks.Plugin):
             humid = temps.get('humidity')
             feels = ("{:.0f}".format(temps.get('feels_like') - 273.15) + "°C")
             try:
-                vis = ("at " + "{:.1f}".format(owm_data.get('visibility') / 1000)
+                vis = ("{:.1f}".format(owm_data.get('visibility') / 1000)
                                + "km")
             except TypeError:
                 vis = 'is unknown'
@@ -165,13 +169,13 @@ class BeestMet(callbacks.Plugin):
             else:
                 ordinal = ''
             c = ':'
-            reply_str = ("Current conditions for \x0306" + city +
-                         "\x0F at " + time_str + bullet + '\x0303' +
+            reply_str = (green + '▶' + pink + bol + city +
+                         "\x0F " + time_str + bullet + '\x0303' +
                          str(temp_cur) + " (" + temp_f + "), " + sky_desc +
-                         '. \x0FFeels like ' + feels + " with " + str(humid) +
-                         "% humidity. Winds" + ordinal + " at " +
-                         str(wind_spd) + "m/s, visibility " + str(vis) + "."
-                         + bullet + loc)
+                         bullet + 'feels like ' + feels + ", " + str(humid) +
+                         '% humidity' + bullet + 'winds' + ordinal + " at " +
+                         str(wind_spd) + 'm/s' + bullet + "visibility " +
+                         str(vis) + bullet + loc)
             return reply_str
 
         my_nick = msgs.nick
