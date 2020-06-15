@@ -49,6 +49,7 @@ pink = "\x0313"
 green = "\x0303"
 bol = '\x02'
 nul = "\x0F"
+itl = '\x1D'
 
 class BeestMet(callbacks.Plugin):
     """get weather data"""
@@ -133,7 +134,6 @@ class BeestMet(callbacks.Plugin):
             owm_data = (requests.get(
                         'http://api.openweathermap.org/data/2.5/weather',
                         params=owm_load).json())
-
             unix_off = owm_data['timezone']
             unix_cur = datetime.datetime.now().timestamp()
             unix_sta = unix_cur + unix_off
@@ -170,8 +170,8 @@ class BeestMet(callbacks.Plugin):
                 ordinal = ''
             c = ':'
             reply_str = (green + '▶' + pink + bol + city +
-                         "\x0F " + time_str + bullet + '\x0303' +
-                         str(temp_cur) + " (" + temp_f + "), " + sky_desc +
+                         "\x0F " + itl + green + time_str + '\x0F\x0303' +
+                         bullet + str(temp_cur) + " (" + temp_f + "), " + sky_desc +
                          bullet + 'feels like ' + feels + ", " + str(humid) +
                          '% humidity' + bullet + 'winds' + ordinal + " at " +
                          str(wind_spd) + 'm/s' + bullet + "visibility " +
@@ -199,15 +199,31 @@ class BeestMet(callbacks.Plugin):
             Get forecast for <location>.
         """
 
-        def seven(lat, lon, loc): # 7-day forecast
+        def seven(lat, lon, loc): # 5-day forecast
             owm_key = self.registryValue('owKey')
             owm_load = {'lat': lat, 'lon': lon, 'exclude':
                         'current,minutely,hourly', 'appid': owm_key}
             owm_data = (requests.get(
                         'http://api.openweathermap.org/data/2.5/onecall',
                         params=owm_load).json())
-            fc_str = "\x0306Forecast"
-            for fc_day in range(0, 7):
+            ow2_load = {'lat': lat, 'lon': lon, 'appid': owm_key}
+            ow2_data = (requests.get(
+                        'http://api.openweathermap.org/data/2.5/weather',
+                        params=ow2_load).json())
+            city = ow2_data['name']
+            sky = ow2_data['weather'][0]
+            temps = ow2_data['main']
+            if not city:
+                city = 'unidentified station'
+            sky_desc = sky.get('main')
+            temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
+            temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
+
+            fc_str = (green + '▶' + pink + bol + city + nul + itl + green +
+                      " Now " + nul + sky_desc + ', ' + temp_cur + ' (' +
+                     temp_f + ')')
+
+            for fc_day in range(0, 5):
                 fc_fc = owm_data['daily'][fc_day]
                 fc_date = fc_fc['dt']
                 fc_lo = "{:.0f}".format(fc_fc['temp']['min'] - 273.15)
@@ -220,6 +236,11 @@ class BeestMet(callbacks.Plugin):
                 fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
                           fc_cond + ", " + str(fc_lo) + "-" +
                           str(fc_hi)) + "°C"
+
+
+
+
+
             fc_str = fc_str + bullet + loc
             return fc_str
             
