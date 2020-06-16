@@ -220,11 +220,12 @@ class BeestMet(callbacks.Plugin):
             temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
 
-            fc_str = (green + '▶' + pink + bol + city + nul + itl + green +
+            fc_str = (green + '▶' + pink + bol + city + nul + pink +
+                      ' forecast' + itl + green +
                       " Now " + nul + sky_desc + ', ' + temp_cur + ' (' +
                      temp_f + ')')
 
-            for fc_day in range(0, 5):
+            for fc_day in range(0, 6):
                 fc_fc = owm_data['daily'][fc_day]
                 fc_date = fc_fc['dt']
                 fc_lo = "{:.0f}".format(fc_fc['temp']['min'] - 273.15)
@@ -233,15 +234,10 @@ class BeestMet(callbacks.Plugin):
                 fc_wkdy = (datetime.datetime.fromtimestamp
                            (int(fc_date)).strftime('%a'))
                 if fc_day == 0:
-                    fc_wkdy = 'Today'
+                    fc_wkdy = 'Later'
                 fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
                           fc_cond + ", " + str(fc_lo) + "-" +
                           str(fc_hi)) + "°C"
-
-
-
-
-
             fc_str = fc_str + bullet + loc
             return fc_str
             
