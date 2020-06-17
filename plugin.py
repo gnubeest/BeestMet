@@ -158,7 +158,7 @@ class BeestMet(callbacks.Plugin):
                 vis = ("{:.1f}".format(owm_data.get('visibility') / 1000)
                                + "km")
             except TypeError:
-                vis = 'is unknown'
+                vis = 'unknown'
             wind_spd = wind.get('speed')
             wind_dir = wind.get('deg')
             if wind_dir:
@@ -170,7 +170,7 @@ class BeestMet(callbacks.Plugin):
                 ordinal = ''
             c = ':'
             reply_str = (green + '▶' + pink + bol + city +
-                         "\x0F\x0306 weather\x0F " + itl + green + 'at ' + time_str +
+                         "\x0F weather " + itl + green + 'at ' + time_str +
                          '\x0F\x0303' + bullet + str(temp_cur) + " (" +
                          temp_f + ')' + bullet + sky_desc +
                          bullet + 'feels like ' + feels + bullet + str(humid) +
@@ -220,10 +220,9 @@ class BeestMet(callbacks.Plugin):
             temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
 
-            fc_str = (green + '▶' + pink + bol + city + nul + pink +
-                      ' forecast' + itl + green +
-                      " Now " + nul + sky_desc + ', ' + temp_cur + ' (' +
-                     temp_f + ')')
+            fc_str = (green + '▶' + pink + bol + city + nul + ' forecast' +
+                      bullet + itl + green + "Now " + nul + sky_desc + ', ' +
+                      temp_cur + ' (' + temp_f + ')')
 
             for fc_day in range(0, 6):
                 fc_fc = owm_data['daily'][fc_day]
