@@ -154,11 +154,13 @@ class BeestMet(callbacks.Plugin):
             baro = temps.get('pressure')
             humid = temps.get('humidity')
             feels = ("{:.0f}".format(temps.get('feels_like') - 273.15) + "°C")
-            try:
-                vis = (', vis ' + "{:.1f}".format
-                       (owm_data.get('visibility') / 1000) + "km")
-            except TypeError:
-                vis = ''
+            #try:
+            #    vis = (', vis ' + "{:.1f}".format
+            #           (owm_data.get('visibility') / 1000) + "km")
+            #except TypeError:
+            #    vis = ''
+            #if vis == ', vis 16.1km':
+            #    vis = ''
             wind_spd = wind.get('speed')
             wind_spd = "{:.1f}".format(wind_spd * 18 / 5)
             wind_dir = wind.get('deg')
@@ -188,7 +190,7 @@ class BeestMet(callbacks.Plugin):
                          + rain_str + bullet + 'feels like ' + feels + ' (' + str(humid)
                          + '% humidity, ' + str(baro) + ' hPa)' + bullet
                          + 'winds' + ordinal + " at " + wind_spd + 'km/h'
-                         + gust + vis + bullet + loc)
+                         + gust + bullet + loc)
             return reply_str
 
         my_nick = msgs.nick
