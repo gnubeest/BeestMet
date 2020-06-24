@@ -151,16 +151,21 @@ class BeestMet(callbacks.Plugin):
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
             #temp_lo = temps.get('temp_min')
             #temp_hi = temps.get('temp_max')
-            #baro = temps.get('pressure')
+            baro = temps.get('pressure')
             humid = temps.get('humidity')
             feels = ("{:.0f}".format(temps.get('feels_like') - 273.15) + "°C")
             try:
-                vis = ("{:.1f}".format(owm_data.get('visibility') / 1000)
-                               + "km")
+                vis = (', vis ' + "{:.1f}".format
+                       (owm_data.get('visibility') / 1000) + "km")
             except TypeError:
-                vis = 'unknown'
+                vis = ''
             wind_spd = wind.get('speed')
             wind_dir = wind.get('deg')
+            wind_gust = wind.get('gust')
+            if wind_gust:
+                gust = ' (gusts ' + str(wind_gust) + 'm/s)'
+            else:
+                gust = ''
             if wind_dir:
                 dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW',
                         'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
@@ -168,15 +173,20 @@ class BeestMet(callbacks.Plugin):
                 ordinal = ' ' + (dirs[ix % len(dirs)])
             else:
                 ordinal = ''
-            c = ':'
-            reply_str = (green + '▶' + pink + bol + city +
-                         "\x0F weather " + itl + green + 'at ' + time_str +
-                         '\x0F\x0303' + bullet + str(temp_cur) + " (" +
-                         temp_f + ')' + bullet + sky_desc +
-                         bullet + 'feels like ' + feels + bullet + str(humid) +
-                         '% humidity' + bullet + 'winds' + ordinal + " at " +
-                         str(wind_spd) + 'm/s' + bullet + "visibility " +
-                         str(vis) + bullet + loc)
+            precip = owm_data.get('rain')
+            if precip:
+                rain = precip.get('1h')
+                rain_str = (' (' + str(rain) + 'mm/h)')
+            else:
+                rain_str = ''
+            
+            reply_str = (green + '▶' + pink + bol + city + nul + itl + green
+                         + ' at ' + time_str + '\x0F\x0303' + bullet +
+                         str(temp_cur) + " (" + temp_f + ')' + ', ' + sky_desc
+                         + rain_str + bullet + 'feels like ' + feels + ' (' + str(humid)
+                         + '% humidity, ' + str(baro) + ' hPa)' + bullet
+                         + 'winds' + ordinal + " at " + str(wind_spd) + 'm/s'
+                         + gust + vis + bullet + loc)
             return reply_str
 
         my_nick = msgs.nick
@@ -220,9 +230,9 @@ class BeestMet(callbacks.Plugin):
             temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
 
-            fc_str = (green + '▶' + pink + bol + city + nul + ' forecast' +
-                      bullet + itl + green + "Now " + nul + sky_desc + ', ' +
-                      temp_cur + ' (' + temp_f + ')')
+            fc_str = (green + '▶' + pink + bol + city + nul + green + itl +
+                      ' forecast' + bullet + green + "Now " + nul + sky_desc
+                      + ', ' + temp_cur + ' (' + temp_f + ')')
 
             for fc_day in range(0, 6):
                 fc_fc = owm_data['daily'][fc_day]
