@@ -160,10 +160,12 @@ class BeestMet(callbacks.Plugin):
             except TypeError:
                 vis = ''
             wind_spd = wind.get('speed')
+            wind_spd = "{:.1f}".format(wind_spd * 18 / 5)
             wind_dir = wind.get('deg')
             wind_gust = wind.get('gust')
             if wind_gust:
-                gust = ' (gusts ' + str(wind_gust) + 'm/s)'
+                wind_gust = "{:.1f}".format(wind_gust * 18 / 5)
+                gust = ' (gusts ' + wind_gust + 'km/h)'
             else:
                 gust = ''
             if wind_dir:
@@ -185,7 +187,7 @@ class BeestMet(callbacks.Plugin):
                          str(temp_cur) + "/" + temp_f + ', ' + sky_desc
                          + rain_str + bullet + 'feels like ' + feels + ' (' + str(humid)
                          + '% humidity, ' + str(baro) + ' hPa)' + bullet
-                         + 'winds' + ordinal + " at " + str(wind_spd) + 'm/s'
+                         + 'winds' + ordinal + " at " + wind_spd + 'km/h'
                          + gust + vis + bullet + loc)
             return reply_str
 
