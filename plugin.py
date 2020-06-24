@@ -182,7 +182,7 @@ class BeestMet(callbacks.Plugin):
             
             reply_str = (green + '▶' + pink + bol + city + nul + itl + green
                          + ' at ' + time_str + '\x0F\x0303' + bullet +
-                         str(temp_cur) + " (" + temp_f + ')' + ', ' + sky_desc
+                         str(temp_cur) + "/" + temp_f + ', ' + sky_desc
                          + rain_str + bullet + 'feels like ' + feels + ' (' + str(humid)
                          + '% humidity, ' + str(baro) + ' hPa)' + bullet
                          + 'winds' + ordinal + " at " + str(wind_spd) + 'm/s'
