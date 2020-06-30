@@ -236,7 +236,7 @@ class BeestMet(callbacks.Plugin):
 
             fc_str = (green + '▶' + pink + bol + city + nul + green + itl +
                       ' forecast' + bullet + green + "Now " + nul + sky_desc
-                      + ', ' + temp_cur + ' (' + temp_f + ')')
+                      + ', ' + temp_cur + '/' + temp_f)
 
             for fc_day in range(0, 6):
                 fc_fc = owm_data['daily'][fc_day]
