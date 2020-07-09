@@ -209,10 +209,46 @@ class BeestMet(callbacks.Plugin):
 
     met = wrap(met, [optional('text')])
 
-    def forecast(self, irc, msgs, args, loc_input):
-        """[<location>]
-            Get forecast for <location>.
+    def forecast(self, irc, msgs, args, fc_type, loc_input):
+        """[<dy/hr> <location>]
+            Get a 6-hour or 5-day forecast.
         """
+
+        def hourly(lat, lon, loc): # 6-hour forecast
+            owm_key = self.registryValue('owKey')
+            owm_load = {'lat': lat, 'lon': lon, 'exclude':
+                        'current,minutely,daily', 'appid': owm_key}
+            owm_data = (requests.get(
+                        'http://api.openweathermap.org/data/2.5/onecall',
+                        params=owm_load).json())
+            ow2_load = {'lat': lat, 'lon': lon, 'appid': owm_key}
+            ow2_data = (requests.get(
+                        'http://api.openweathermap.org/data/2.5/weather',
+                        params=ow2_load).json())
+            city = ow2_data['name']
+            sky = ow2_data['weather'][0]
+            temps = ow2_data['main']
+            if not city:
+                city = 'unidentified station'
+            sky_desc = sky.get('main')
+            temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
+            temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
+
+            fc_str = (green + '▶' + pink + bol + city + nul + green + itl +
+                      ' forecast' + bullet + green + "Now " + nul + sky_desc
+                      + ', ' + temp_cur + '/' + temp_f)
+
+            for fc_day in range(0, 6):
+                fc_fc = owm_data['hourly'][fc_day]
+                fc_date = fc_fc['dt']
+                fc_temp = "{:.0f}".format(fc_fc['temp'] - 273.15)
+                fc_cond = fc_fc['weather'][0]['main']
+                fc_time = (datetime.datetime.fromtimestamp
+                           (int(fc_date)).strftime('%R'))
+                fc_str = (fc_str + bullet + "\x0303" + fc_time + "\x0F " +
+                          fc_cond + ", " + str(fc_temp) + "°C")
+            fc_str = fc_str + bullet + loc
+            return fc_str
 
         def seven(lat, lon, loc): # 5-day forecast
             owm_key = self.registryValue('owKey')
@@ -262,10 +298,16 @@ class BeestMet(callbacks.Plugin):
         geo = self.quest(nick_done)
         #if geo == 'fail':
         #    return
-        reply_str = seven(geo[0], geo[1], geo[2])
+        if fc_type == 'dy':
+            reply_str = seven(geo[0], geo[1], geo[2])
+        elif fc_type == 'hr':
+            reply_str = hourly(geo[0], geo[1], geo[2])
+        else:
+            irc.error('forecast type is either `dy` or `hr`')
+            return
         irc.reply(reply_str + print_nick, prefixNick=False)
 
-    forecast = wrap(forecast, [optional('text')])
+    forecast = wrap(forecast, ['somethingWithoutSpaces', optional('text')])
 
 Class = BeestMet
 

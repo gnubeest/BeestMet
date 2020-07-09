@@ -15,7 +15,7 @@ API keys from mapquestapi.com and openweathermap.org for current weather
 * `met <location>` for current weather
 * `met <nick>` retrieves weather for a nick registered in a `met.json` file
 * `met` will retrieve weather for your own nick
-* `forecast` also serves a brief 7-day forecast
+* `forecast` also serves a 5-day <dy> or 6-hour <hr> forecast
 > `met.json` is a simple list of nicks and locations in `key: value` pairs
 
 
