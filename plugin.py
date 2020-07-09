@@ -190,7 +190,8 @@ class BeestMet(callbacks.Plugin):
                          + rain_str + bullet + 'feels like ' + feels + ' (' + str(humid)
                          + '% humidity, ' + str(baro) + ' hPa)' + bullet
                          + 'winds' + ordinal + " at " + wind_spd + 'km/h'
-                         + gust + bullet + loc)
+                         + gust + ' ' + loc)
+
             return reply_str
 
         my_nick = msgs.nick
@@ -234,6 +235,8 @@ class BeestMet(callbacks.Plugin):
             temp_cur = ("{:.0f}".format(temps.get('temp') - 273.15) + "°C")
             temp_f = ("{:.0f}".format(temps.get('temp') * 9 / 5 - 459.67) + "°F")
 
+            unix_off = owm_data['timezone_offset']
+
             fc_str = (green + '▶' + pink + bol + city + nul + green + itl +
                       ' forecast' + bullet + green + "Now " + nul + sky_desc
                       + ', ' + temp_cur + '/' + temp_f)
@@ -243,11 +246,12 @@ class BeestMet(callbacks.Plugin):
                 fc_date = fc_fc['dt']
                 fc_temp = "{:.0f}".format(fc_fc['temp'] - 273.15)
                 fc_cond = fc_fc['weather'][0]['main']
+                unix_sta = fc_date + unix_off
                 fc_time = (datetime.datetime.fromtimestamp
-                           (int(fc_date)).strftime('%R'))
+                           (int(unix_sta)).strftime('%R'))
                 fc_str = (fc_str + bullet + "\x0303" + fc_time + "\x0F " +
                           fc_cond + ", " + str(fc_temp) + "°C")
-            fc_str = fc_str + bullet + loc
+            fc_str = fc_str + ' ' + loc
             return fc_str
 
         def seven(lat, lon, loc): # 5-day forecast
@@ -287,7 +291,7 @@ class BeestMet(callbacks.Plugin):
                 fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
                           fc_cond + ", " + str(fc_lo) + "-" +
                           str(fc_hi)) + "°C"
-            fc_str = fc_str + bullet + loc
+            fc_str = fc_str + ' ' + loc
             return fc_str
             
         my_nick = msgs.nick
