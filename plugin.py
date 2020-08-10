@@ -287,7 +287,7 @@ class BeestMet(callbacks.Plugin):
                 fc_wkdy = (datetime.datetime.fromtimestamp
                            (int(fc_date)).strftime('%a'))
                 if fc_day == 0:
-                    fc_wkdy = 'Later'
+                    fc_wkdy = 'Today'
                 fc_str = (fc_str + bullet + "\x0303" + fc_wkdy + "\x0F " +
                           fc_cond + ", " + str(fc_lo) + "-" +
                           str(fc_hi)) + "°C"
